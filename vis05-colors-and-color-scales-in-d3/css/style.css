@@ -1,0 +1,9 @@
+#tooltip{
+    position:fixed;
+    padding:5px;
+    background-color: white;
+    opacity: 0.9;
+    border: solid 1px black;
+    display: none;
+    font-family: Arial, Helvetica, sans-serif;
+}

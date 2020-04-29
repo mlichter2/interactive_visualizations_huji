@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>d3</title>
+ </head>
+
+<body>
+    <p id="para-1" class="my-para">some words...
+        <span>bla bla bla</span>
+        <span>la la la</span>
+    </p>
+    <p id="para-2" class="my-para">some more words...</p>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script>
+        var selection = d3.select(".my-para")
+        
+        selection.selectAll("span")
+        .html('<b>some words </b>')
+
+       
+    </script>
+    
+</body>
+</html>
