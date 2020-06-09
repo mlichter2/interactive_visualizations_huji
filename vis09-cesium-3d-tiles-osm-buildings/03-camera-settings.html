@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.70/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.70/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <style>
+        /* style for the viewer container */
+        .full-size {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
+
+    </style>
+</head>
+
+<body>
+    <!-- container for the viewer -->
+    <div id="cesiumContainer" class="full-size"></div>
+    <script>
+        // add access token
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMmVlNTkyMS01Yzg1LTRmMzYtOTU5MS1hNjUyNGRiZGEwMzMiLCJpZCI6Mjg5NzYsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1OTE2OTQzMzl9.NqnNYcDkyyCTUt4nzqnDOi4TGCJs-Qj2VSETrcN4XNs';
+        // create cesium viewer, add global terrain provider
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+                terrainProvider: new Cesium.CesiumTerrainProvider({
+                    url: Cesium.IonResource.fromAssetId(1),
+                }),
+            });
+
+
+        // Set the initial camera view to look at TLV
+        var initialPosition = new Cesium.Cartesian3(
+            4444164.737049551,
+                3085898.756475615,
+                3366767.6324452776
+        );
+        var initialOrientation = new Cesium.HeadingPitchRoll(
+            0.37138509316833623,
+            -0.3725213838923431,
+            0.0716951918898415
+        );
+        viewer.scene.camera.setView({
+            destination: initialPosition,
+            orientation: initialOrientation,
+            endTransform: Cesium.Matrix4.IDENTITY,
+        });
+
+
+        //add osm building 3d tileset
+        var tileset = viewer.scene.primitives.add(
+            new Cesium.Cesium3DTileset({
+                url: Cesium.IonResource.fromAssetId(96188),
+            })
+        );
+
+
+    </script>
+</body>
+
+</html>
