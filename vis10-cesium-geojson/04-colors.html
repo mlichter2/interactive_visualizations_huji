@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.70/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.70/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <style>
+        .full-size {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="cesiumContainer" class="full-size"></div>
+    <script>
+        Cesium.Ion.defaultAccessToken = 'your_access_token';
+
+        //create an instance of a cesium viewer (lives in the cesiumContainer div)
+
+        var viewer = new Cesium.Viewer('cesiumContainer');
+        /// use GeoJsonDataSource to add a geojson datasource (if not a variable then a path)
+        // https://cesiumjs.org/Cesium/Build/Documentation/GeoJsonDataSource.html?classFilter=geoJson
+        /// after the data was loaded it is converted into a Cesium DataSource:
+        // https://cesium.com/docs/cesiumjs-ref-doc/DataSource.html?classFilter=DataSource
+        // returning a Cesium  EnityCollection :
+        // https://cesiumjs.org/Cesium/Build/Documentation/EntityCollection.html
+        viewer.dataSources
+            .add(Cesium.GeoJsonDataSource
+                .load("data/districts.geojson"))
+            .then(function (dataSource) {
+
+                var entities = dataSource.entities.values;
+                console.log(entities)
+
+                for (var i = 0; i < entities.length; i++) {
+                    var entity = entities[i];
+
+                    //colors in Cesiun :https://cesiumjs.org/Cesium/Build/Documentation/Color.html
+                    // Cesium uses instances of the class Color to define colors
+                    // here we use a ore-defined one
+                    // but e can also use new Cesium.Color.fromBytes(red, green, blue, alpha)
+                    // to define an rgb color
+                    entity.polygon.outlineColor = Cesium.Color.BLACK;
+
+                    // entity.polygon.height =0;
+                    entity.polygon.extrudedHeight = entity.properties.PERC_APT_2018 * 1000
+
+
+                    //  classify district colors by hhsize. you can use this web site: http://colorbrewer2.org/#type=sequential&scheme=BuGn&n=6
+                    // to generate a color scheme by the number of groups. 
+
+
+
+                    if (entity.properties.HH_SIZE_2018 <= 2.5) {
+                        entity.polygon.material = Cesium.Color.fromCssColorString('#feebe2')
+                    } else if (entity.properties.HH_SIZE_2018 <= 3) {
+                        entity.polygon.material = Cesium.Color.fromCssColorString('#fbb4b9')
+                    } else if (entity.properties.HH_SIZE_2018 <= 3.5) {
+                        entity.polygon.material = Cesium.Color.fromCssColorString('#f768a1')
+                    } else if (entity.properties.HH_SIZE_2018 <= 4) {
+                        entity.polygon.material = Cesium.Color.fromCssColorString('#c51b8a')
+                    } else {
+                        entity.polygon.material = Cesium.Color.fromCssColorString('#7a0177')
+                    }
+
+                }
+
+                viewer.flyTo(dataSource)
+
+            });
+
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.70/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.70/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <style>
+        .full-size {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="cesiumContainer" class="full-size"></div>
+    <script>
+        Cesium.Ion.defaultAccessToken = 'your_access_token';
+
+        //create an instance of a cesium viewer (lives in the cesiumContainer div)
+
+        var viewer = new Cesium.Viewer('cesiumContainer');
+        /// use GeoJsonDataSource to add a geojson datasource (if not a variable then a path)
+        // https://cesiumjs.org/Cesium/Build/Documentation/GeoJsonDataSource.html?classFilter=geoJson
+        /// after the data was loaded it is converted into a Cesium DataSource:
+        // https://cesium.com/docs/cesiumjs-ref-doc/DataSource.html?classFilter=DataSource
+        // returning a Cesium  EnityCollection :
+        // https://cesiumjs.org/Cesium/Build/Documentation/EntityCollection.html
+        viewer.dataSources
+            .add(Cesium.GeoJsonDataSource
+                .load("data/districts.geojson"))
+            .then(function (dataSource) {
+                console.log(dataSource)
+                viewer.flyTo(dataSource)
+            });
+
+
+    </script>
+</body>
+
+</html>
