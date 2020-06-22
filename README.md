@@ -1,6 +1,7 @@
 # Dynamic Mapping and Spatial Data Visualization Course
-
+**d3.js Earthquakes map**
 ![](figs/Vy5j24Ogau.gif)
+**cesium.js Apartments map**
 ![](figs/C15NiOlj7s.gif)
 
 
