@@ -1,6 +1,8 @@
 # Dynamic Mapping and Spatial Data Visualization Course
 
 ![](figs/Vy5j24Ogau.gif)
+![](figs/C15NiOlj7s.gif)
+
 
 ## Syllabus
 https://shnaton.huji.ac.il/index.php/NewSyl/40891/2/2020/
