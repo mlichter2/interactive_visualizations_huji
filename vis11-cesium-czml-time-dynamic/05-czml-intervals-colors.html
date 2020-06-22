@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.70/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.70/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <style>
+        .full-size {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="cesiumContainer" class="full-size"></div>
+    <script>
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMmVlNTkyMS01Yzg1LTRmMzYtOTU5MS1hNjUyNGRiZGEwMzMiLCJpZCI6Mjg5NzYsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1OTE2OTQzMzl9.NqnNYcDkyyCTUt4nzqnDOi4TGCJs-Qj2VSETrcN4XNs';
+
+        //create an instance of a cesium viewer (lives in the cesiumContainer div)
+
+        // Create a clock that loops on Christmas day 2013 and runs in real-time.
+        var clock = new Cesium.Clock({
+            startTime: Cesium.JulianDate.fromIso8601("2012-01-01"),
+            currentTime: Cesium.JulianDate.fromIso8601("2012-01-01"),
+            stopTime: Cesium.JulianDate.fromIso8601("2020-01-01"),
+
+            shouldAnimate: true
+        });
+
+        console.log('date', Cesium.JulianDate.fromIso8601("2020-01-01"))
+
+        var viewer = new Cesium.Viewer('cesiumContainer', {
+            clockViewModel: new Cesium.ClockViewModel(clock),
+            imageryProvider: new Cesium.OpenStreetMapImageryProvider({
+                url: 'https://a.tile.openstreetmap.org/'
+            })
+        });
+        /// use GeoJsonDataSource to add a geojson datasource (if not a variable then a path)
+        // https://cesiumjs.org/Cesium/Build/Documentation/GeoJsonDataSource.html?classFilter=geoJson
+        /// after the data was loaded it is converted into a Cesium DataSource:
+        // https://cesium.com/docs/cesiumjs-ref-doc/DataSource.html?classFilter=DataSource
+        // returning a Cesium  EnityCollection :
+        // https://cesiumjs.org/Cesium/Build/Documentation/EntityCollection.html
+
+        Cesium.GeoJsonDataSource
+            .load("data/apartments_2012_2019_points.geojson")
+            .then(function (dataSource) {
+
+                var entities = dataSource.entities.values;
+
+                var czml = [{
+                    "id": "document",
+                    "name": "CZML apartments",
+                    "version": "1.0",
+                    "clock": {
+                        "interval": "2012-01-01T00:00:00Z/2020-01-01T00:00:00Z",
+                        "currentTime": "2012-01-01T00:00:00Z",
+                        "multiplier": 31557600,
+                        // "step": "TICK_DEPENDENT"
+                    }
+                },]
+
+                var id = 0;
+
+
+                for (var i = 0; i < entities.length; i++) {
+                    var entity = entities[i];
+                    // limit places with more than 20000 apartments
+                    if (entity.properties.apartments_Apt_2019._value > 20000) {
+
+                        // get the cartesian position of each entity
+                        var pos = Cesium.Cartographic.fromCartesian(entity.position._value)
+
+                        // convert the cartesian position of each entity to lat and lon coordinates
+                        var lat = Cesium.Math.toDegrees(pos.latitude);
+                        var lon = Cesium.Math.toDegrees(pos.longitude);
+
+                        //create an extrusions  and color intervals
+                        var extrusions = []
+                        var colors = []
+                        //loop over the years range
+                        for (var year = 2012; year < 2020; year++) {
+                            //the # of apt. in 2012
+                            var apt2012 = parseInt(entity.properties.apartments_Apt_2012._value);
+                            //the # of apt. in the current year
+                            var aptYear = parseInt(entity.properties["apartments_Apt_" + year]._value);
+                            //the  difference (added apts.)
+                            var addedApt = aptYear - apt2012;
+                            // push the interval to the extrusions 
+                            extrusions.push({
+                                "interval": new Date("01-01-" + year.toString()).toISOString() +
+                                    "/" + new Date("01-01-" + (year + 1).toString()).toISOString(),
+                                "number": addedApt
+                            })
+                            //default color
+                            var color = [127, 127, 127, 127]
+
+                            //color scheme - classify places by num. of apartments.
+                            // you can use this web site: http://colorbrewer2.org/#type=sequential&scheme=BuGn&n=6
+                            if (addedApt <= 100) {
+                                color = [254, 235, 226, 127]
+                            } else if (addedApt <= 500) {
+                                color = [251, 180, 185, 127]
+                            } else if (addedApt <= 5000) {
+                                color = [247, 104, 161, 127]
+                            } else if (addedApt <= 10000) {
+                                color = [197, 27, 138, 127]
+                            } else {
+                                color = [122, 1, 119, 127]
+                            }
+                            //color interval
+
+                            colors.push({
+                                "interval": new Date("01-01-" + year.toString()).toISOString() +
+                                    '/' +
+                                    new Date("01-01-" + (year + 1).toString()).toISOString(),
+                                "rgba": color
+                            })
+
+                        }
+
+                        //add each entity to the czml object, with a unique id, position and ellipse geometry
+                        czml.push({
+                            "id": id,
+                            "name": entity.properties.Shem_Yishu,
+                            "description": "<p> <b>apt_2012: </b>" + entity.properties.apartments_Apt_2012 + '</p>' +
+                                "<p> <b>apt_2013: </b>" + entity.properties.apartments_Apt_2013 + '</p>' +
+                                "<p> <b>apt_2014: </b>" + entity.properties.apartments_Apt_2014 + '</p>' +
+                                "<p> <b>apt_2015: </b>" + entity.properties.apartments_Apt_2015 + '</p>' +
+                                "<p> <b>apt_2016: </b>" + entity.properties.apartments_Apt_2016 + '</p>' +
+                                "<p> <b>apt_2017: </b>" + entity.properties.apartments_Apt_2017 + '</p>' +
+                                "<p> <b>apt_2018: </b>" + entity.properties.apartments_Apt_2018 + '</p>' +
+                                "<p> <b>apt_2019: </b>" + entity.properties.apartments_Apt_2019 + '</p>',
+                            "position": {
+                                "cartographicDegrees": [lon, lat, 0]
+                            },
+                            "ellipse": {
+                                "semiMajorAxis": 1000,
+                                "semiMinorAxis": 1000,
+                                "material": {
+                                    "solidColor": {
+                                        "color": colors,
+                                    }
+                                },
+                                "extrudedHeight": extrusions,
+                            }
+                        })
+
+                        id++
+
+                    }
+
+                }
+                console.log(czml)
+
+                return czml;
+
+
+            }).then(function (dataSource) {
+                var promise = Cesium.CzmlDataSource.load(dataSource);
+                viewer.dataSources.add(promise).then(function (dataSource) {
+                    viewer.flyTo(dataSource)
+                })
+            })
+
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.70/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.70/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <style>
+        .full-size {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="cesiumContainer" class="full-size"></div>
+    <script>
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMmVlNTkyMS01Yzg1LTRmMzYtOTU5MS1hNjUyNGRiZGEwMzMiLCJpZCI6Mjg5NzYsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1OTE2OTQzMzl9.NqnNYcDkyyCTUt4nzqnDOi4TGCJs-Qj2VSETrcN4XNs';
+
+        //create an instance of a cesium viewer (lives in the cesiumContainer div)
+
+        // Create a clock that loops on Christmas day 2013 and runs in real-time.
+            var clock = new Cesium.Clock({
+                startTime: Cesium.JulianDate.fromIso8601("2012-01-01"),
+                currentTime: Cesium.JulianDate.fromIso8601("2012-01-01"),
+                stopTime: Cesium.JulianDate.fromIso8601("2020-01-01"),
+                clockRange: Cesium.ClockRange.LOOP_STOP,
+                clockStep: Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER
+            });
+
+        console.log('date', Cesium.JulianDate.fromIso8601("2020-01-01"))
+
+        var viewer = new Cesium.Viewer('cesiumContainer', {
+            clockViewModel: new Cesium.ClockViewModel(clock),
+        });
+        /// use GeoJsonDataSource to add a geojson datasource (if not a variable then a path)
+        // https://cesiumjs.org/Cesium/Build/Documentation/GeoJsonDataSource.html?classFilter=geoJson
+        /// after the data was loaded it is converted into a Cesium DataSource:
+        // https://cesium.com/docs/cesiumjs-ref-doc/DataSource.html?classFilter=DataSource
+        // returning a Cesium  EnityCollection :
+        // https://cesiumjs.org/Cesium/Build/Documentation/EntityCollection.html
+
+        viewer.dataSources
+            .add(Cesium.GeoJsonDataSource
+                .load("data/apartments_2012_2019_points.geojson"))
+            .then(function (dataSource) {
+
+                var entities = dataSource.entities.values;
+                console.log(entities)
+
+                for (var i = 0; i < entities.length; i++) {
+                    var entity = entities[i];
+
+                    entity.billboard = undefined;
+                    entity.ellipse = new Cesium.EllipseGraphics(
+                        {
+                        semiMajorAxis: 1000,
+                        semiMinorAxis: 1000,
+                        extrudedHeight: entity.properties.apartments_Apt_2019
+                        }
+                    )
+
+                    // colors in Cesiun :https://cesiumjs.org/Cesium/Build/Documentation/Color.html
+                    // Cesium uses instances of the class Color to define colors
+                    // here we use a ore-defined one
+                    // but e can also use new Cesium.Color.fromBytes(red, green, blue, alpha)
+                    // to define an rgb color
+                   
+
+                    //  classify places by num. of apartments. you can use this web site: http://colorbrewer2.org/#type=sequential&scheme=BuGn&n=6
+                    // to generate a color scheme by the number of groups. 
+
+
+
+                    if (entity.properties.apartments_Apt_2019 <= 1000) {
+                        entity.ellipse.material = Cesium.Color.fromCssColorString('#feebe2')
+                    } else if (entity.properties.apartments_Apt_2019 <= 20000) {
+                        entity.ellipse.material = Cesium.Color.fromCssColorString('#fbb4b9')
+                    } else if (entity.properties.apartments_Apt_2019 <= 50000) {
+                        entity.ellipse.material = Cesium.Color.fromCssColorString('#f768a1')
+                    } else if (entity.properties.apartments_Apt_2019 <= 100000) {
+                        entity.ellipse.material = Cesium.Color.fromCssColorString('#c51b8a')
+                    } else {
+                        entity.ellipse.material = Cesium.Color.fromCssColorString('#7a0177')
+                    }
+
+                }
+
+                viewer.flyTo(dataSource)
+
+            });
+
+
+    </script>
+</body>
+
+</html>
